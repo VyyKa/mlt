@@ -37,7 +37,7 @@ export const SITUATIONS: Situation[] = [
     id: 2,
     title: "Biểu tình tập thể",
     description: "Công nhân đang tổ chức biểu tình đòi giảm giờ làm mà vẫn giữ nguyên lương.",
-    imageSrc: "/images/s2_protest.jpg",
+    imageSrc: "/anh1.jpg",
     options: [
       {
         key: "dau-tranh",

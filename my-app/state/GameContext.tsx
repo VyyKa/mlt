@@ -6,6 +6,8 @@ export type Choice = "dau-tranh" | "im-lang" | null;
 export interface GameState {
   role: Role;
   choices: Record<number, Choice>;
+  spirit: number; // tinh thần đấu tranh
+  fear: number;   // mức độ sợ hãi
 }
 
 interface GameContextValue extends GameState {
@@ -14,9 +16,10 @@ interface GameContextValue extends GameState {
   reset: () => void;
 }
 
+
 const STORAGE_KEY = "marx_game_state_v1";
 
-const defaultState: GameState = { role: null, choices: {} };
+const defaultState: GameState = { role: null, choices: {}, spirit: 0, fear: 0 };
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
 
@@ -29,7 +32,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw) as GameState;
-        setState({ role: parsed.role ?? null, choices: parsed.choices ?? {} });
+        setState({ role: parsed.role ?? null, choices: parsed.choices ?? {}, spirit: parsed.spirit ?? 0, fear: parsed.fear ?? 0 });
       }
     } catch {}
   }, []);
@@ -47,8 +50,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => ({ ...prev, role }));
   }, []);
 
+  const recomputeScores = (choices: Record<number, Choice>) => {
+    let spirit = 0;
+    let fear = 0;
+    Object.values(choices).forEach((c) => {
+      if (c === "dau-tranh") spirit += 1;
+      if (c === "im-lang") fear += 1;
+    });
+    return { spirit, fear };
+  };
+
   const setChoice = useCallback((id: number, choice: Exclude<Choice, null>) => {
-    setState(prev => ({ ...prev, choices: { ...prev.choices, [id]: choice } }));
+    setState(prev => {
+      const nextChoices = { ...prev.choices, [id]: choice };
+      const { spirit, fear } = recomputeScores(nextChoices);
+      return { ...prev, choices: nextChoices, spirit, fear };
+    });
   }, []);
 
   const reset = useCallback(() => setState(defaultState), []);
